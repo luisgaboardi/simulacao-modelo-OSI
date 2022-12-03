@@ -16,7 +16,7 @@
 
 int main(int argc, char *argv[])
 {
-  int socketDescriptor, rc, n;
+  int socketDescriptor;
   struct sockaddr_in clientAddress;  /* Vai conter identificacao do cliente */
   socklen_t clientAdressSize;
   struct sockaddr_in serverAddress; /* Vai conter identificacao do servidor local */
@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
     }
 
     /* imprime a mensagem recebida na tela do usuario */
-    printf(" MENSAGEM RECEBIDA\n\n");
+    printf("\nMENSAGEM RECEBIDA\n\n");
     printf("Informações do Servidor:\n");
     printf("   Protolo de rede: UDP\n");
     printf("   Endereço de IP : %s\n", inet_ntoa(serverAddress.sin_addr));
@@ -74,6 +74,7 @@ int main(int argc, char *argv[])
     printf("   Endereço de IP : %s\n", inet_ntoa(clientAddress.sin_addr));
     printf("   Porta          : %u\n", ntohs(clientAddress.sin_port));
     printf("   Mensagem       : %s\n",  msg);
+    printf("\n--------------------------------------\n");
 
   } /* fim do while */
   return 0;
