@@ -2,9 +2,17 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/types.h>  
+#include <sys/ipc.h>  
+#include <sys/msg.h>   
 
-#define LSIZ 128
-#define RSIZ 10
+#define LSIZ 1000
+#define RSIZ 100
+
+struct my_msg{  
+    long int msg_type;  
+    char messageBody[51];  
+};
 
 int menu();
 void menuEnviarMensagem();
@@ -18,7 +26,7 @@ int menu()
     int opcao = 0;
     while (opcao != 3)
     {
-        system("clear");
+        //system("clear");
         printf("** MENU **\n\n");
         printf("(1) Enviar uma mensagem\n");
         printf("(2) Receber uma mensagem\n");
@@ -40,6 +48,20 @@ int menu()
     return 0;
 }
 
+void splice(char mensagem[], struct my_msg message, int msgid){
+    int i = 0;
+    while (i <= strlen(mensagem)){
+        message.msg_type=1;  
+        strncpy(message.messageBody, (mensagem)+i, 50);
+        message.messageBody[50] = '\0';
+        if(msgsnd(msgid,(void *)&message, 51,0)==-1) // msgsnd returns -1 if the message is not sent  
+            {  
+                printf("Msg not sent\n");  
+            }  
+        i+=51;
+    }
+}
+
 void menuEnviarMensagem()
 {
     system("clear");
@@ -48,6 +70,16 @@ void menuEnviarMensagem()
     printf("\nQual o caminho e nome do arquivo de texto que deseja enviar?\n> ");
     scanf("%s", caminhoNome);
 
+    int msgid;  
+    struct my_msg message;  
+
+    msgid=msgget((key_t)14534,0666|IPC_CREAT);  
+    if (msgid == -1) // -1 means the message queue is not created  
+    {  
+        printf("Error in creating queue\n");  
+        exit(0);  
+    }  
+    
     // Ler o arquivo
     char line[RSIZ][LSIZ];
     int i = 0;
@@ -59,7 +91,7 @@ void menuEnviarMensagem()
     }
     while (fgets(line[i], LSIZ, ptr))
     {
-        line[i][strlen(line[i]) - 1] = '\0';
+        line[i][strlen(line[i])] = '\0';
         i++;
     }
     int tot = i;
@@ -67,20 +99,17 @@ void menuEnviarMensagem()
     {
         strcat(mensagem, line[i]);
     }
-
-    // Definir tamanho do pacote
-
-    enviarMensagem(mensagem);
+    fclose(ptr);
+    splice(mensagem, message, msgid);
+    enviarMensagem();
 }
 
-void enviarMensagem(char mensagem[3000])
-{
+void enviarMensagem()
+{   
     char cmd[3000] = "";
     strcat(cmd, "gcc udpClient.c -o client && ./client ");
     strcat(cmd, "127.0.0.25 ");
-    strcat(cmd, "5000 \"");
-    strcat(cmd, mensagem);
-    strcat(cmd, "\"");
+    strcat(cmd, "5000");
     system(cmd);
 }
 

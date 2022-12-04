@@ -11,7 +11,14 @@
 #include <unistd.h>
 #include <string.h> /* memset() */
 #include <stdlib.h>
+#include <sys/types.h>  
+#include <sys/ipc.h>  
+#include <sys/msg.h>   
 
+struct my_msg{  
+  long int msg_type;  
+  char messageBody[51];  
+}; 
 #define MAX_MSG 100
 
 int main(int argc, char *argv[])
@@ -54,16 +61,22 @@ int main(int argc, char *argv[])
     exit(1);
   }
 
+  int msgid;  
+  struct my_msg message;  
+  long int msg_to_rec=0;  
+  msgid=msgget((key_t)14534,0666|IPC_CREAT);  
+
   /* Enviando um pacote para cada parâmetro informado */
-  for (int param = 3; param < argc; param++)
+  for (int line = 0; line < 5; line++)
   {
-    if (sendto(socketDescriptor, argv[param], strlen(argv[param]), 0, (struct sockaddr *)&serverAddress, sizeof(serverAddress)) < 0)
+    msgrcv(msgid,(void *)&message,51,msg_to_rec,0);
+    if (sendto(socketDescriptor, message.messageBody, strlen(message.messageBody), 0, (struct sockaddr *)&serverAddress, sizeof(serverAddress)) < 0)
     {
-      printf("%s: nao pode enviar dados %d \n", argv[0], param - 1);
+      printf("%s: nao pode enviar dados %d \n", argv[0], line);
       close(socketDescriptor);
       exit(1);
     }
-    printf("Enviando parametro %d: %s\n", param - 2, argv[param]);
+    printf("Enviando linha %d: %s\n", line, message.messageBody);
   } /* fim do for (laco) */
   return 1;
 } /* fim do programa */

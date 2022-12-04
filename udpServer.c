@@ -10,12 +10,11 @@
 #include <stdio.h>
 #include <unistd.h> /* close() */
 #include <string.h> /* memset() */
-#include <stdlib.h>
-
-#define MAX_MSG 100
+#include <stdlib.h> 
 
 int main(int argc, char *argv[])
 {
+  int MAX_MSG = 100;
   int socketDescriptor;
   struct sockaddr_in clientAddress;  /* Vai conter identificacao do cliente */
   socklen_t clientAdressSize;
