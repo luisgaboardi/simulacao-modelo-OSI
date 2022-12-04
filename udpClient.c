@@ -34,8 +34,8 @@ int main(int argc, char *argv[])
 
   /* Preenchendo as informacoes de identificacao do cliente */
   ClientAddress.sin_family = AF_INET; /* Define protocolo IPV4 */
-  ClientAddress.sin_addr.s_addr = htonl(INADDR_ANY); /* Define o endereço IP */
-  ClientAddress.sin_port = htons(0); /* usa porta livre entre (1024-5000)*/
+  ClientAddress.sin_addr.s_addr = htonl(0x7f000001); /* Define o endereço IP */
+  ClientAddress.sin_port = htons(4000); /* Define porta */
 
   /* Criando um socket. Nesse momento a variavel       */
   /* socketDescriptor contém apenas dados sobre familia e protocolo  */
@@ -53,14 +53,6 @@ int main(int argc, char *argv[])
     printf("%s: nao pode fazer um bind da porta\n", argv[0]);
     exit(1);
   }
-
-  printf("Informações para envio de mensagem:\n\n");
-    printf("   Protolo de rede         : UDP\n");
-    printf("   Endereço de IP (Cliente): %s\n", inet_ntoa(ClientAddress.sin_addr));
-    printf("   Porta          (Cliente): %u\n", ntohs(ClientAddress.sin_port));
-    printf("-------------------------------------------------\n");
-    printf("   Endereço de IP (Cliente): %s\n", argv[1]);
-    printf("   Porta          (Cliente): %s\n", argv[2]);
 
   /* Enviando um pacote para cada parâmetro informado */
   for (int param = 3; param < argc; param++)
