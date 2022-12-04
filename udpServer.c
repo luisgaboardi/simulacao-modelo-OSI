@@ -10,16 +10,16 @@
 #include <stdio.h>
 #include <unistd.h> /* close() */
 #include <string.h> /* memset() */
-#include <stdlib.h> 
+#include <stdlib.h>
 
 int main(int argc, char *argv[])
 {
   int MAX_MSG = 100;
   int socketDescriptor;
-  struct sockaddr_in clientAddress;  /* Vai conter identificacao do cliente */
+  struct sockaddr_in clientAddress; /* Vai conter identificacao do cliente */
   socklen_t clientAdressSize;
   struct sockaddr_in serverAddress; /* Vai conter identificacao do servidor local */
-  char msg[MAX_MSG];          /* Buffer que armazena os dados que chegaram via rede */
+  char msg[MAX_MSG];                /* Buffer que armazena os dados que chegaram via rede */
 
   if (argc < 3) /* Se o IP e a porta não foram passados (qtd de argumento inferior a 3) */
   {
@@ -27,7 +27,7 @@ int main(int argc, char *argv[])
     exit(1);
   }
   /* Criacao do socket UDP */
-  socketDescriptor = socket(AF_INET, SOCK_DGRAM, 0); /* AF_INET = utiliza IPV4, SOCK_DGRAM = utiliza UDP, 0 = utiliza protocolo IP */ 
+  socketDescriptor = socket(AF_INET, SOCK_DGRAM, 0); /* AF_INET = utiliza IPV4, SOCK_DGRAM = utiliza UDP, 0 = utiliza protocolo IP */
   if (socketDescriptor < 0)
   {
     printf("%s: nao pode abrir o socket \n", argv[0]);
@@ -35,9 +35,9 @@ int main(int argc, char *argv[])
   }
 
   /* Preenchendo informacoes sobre o servidor */
-  serverAddress.sin_family = AF_INET; /* Define protocolo IPV4 */
+  serverAddress.sin_family = AF_INET;                 /* Define protocolo IPV4 */
   serverAddress.sin_addr.s_addr = inet_addr(argv[1]); /* Define o endereço IP */
-  serverAddress.sin_port = htons(atoi(argv[2])); /* Define a porta */
+  serverAddress.sin_port = htons(atoi(argv[2]));      /* Define a porta */
 
   /* Fazendo um bind na porta local do servidor */
   if (bind(socketDescriptor, (struct sockaddr *)&serverAddress, sizeof(serverAddress)) < 0) /* Se não foi possível linkar um endereço ao socket */
@@ -63,16 +63,23 @@ int main(int argc, char *argv[])
     }
 
     /* imprime a mensagem recebida na tela do usuario */
-    printf("\nMENSAGEM RECEBIDA\n\n");
-    printf("Informações do Servidor:\n");
-    printf("   Protolo de rede: UDP\n");
-    printf("   Endereço de IP : %s\n", inet_ntoa(serverAddress.sin_addr));
-    printf("   Porta          : %u\n", ntohs(serverAddress.sin_port));
+    if (msg[0] == '0' && msg[1] == '0' && msg[2] == '0')
+    {
+      printf("\nMENSAGEM RECEBIDA\n\n");
+      printf("Informações do Servidor:\n");
+      printf("   Protolo de rede: UDP\n");
+      printf("   Endereço de IP : %s\n", inet_ntoa(serverAddress.sin_addr));
+      printf("   Porta          : %u\n", ntohs(serverAddress.sin_port));
 
-    printf("\nInformações do Cliente:\n");
-    printf("   Endereço de IP : %s\n", inet_ntoa(clientAddress.sin_addr));
-    printf("   Porta          : %u\n", ntohs(clientAddress.sin_port));
-    printf("   Mensagem       : %s\n",  msg);
+      printf("\nInformações do Cliente:\n");
+      printf("   Endereço de IP : %s\n", inet_ntoa(clientAddress.sin_addr));
+      printf("   Porta          : %u\n", ntohs(clientAddress.sin_port));
+      printf("\n--------------------------------------\n");
+    }
+    char finalMessage[10000], IDPacote[4];
+    strcpy(finalMessage, (msg)+3);
+    strncpy(IDPacote, msg, 3);
+    printf("Mensagem[%s]: %s\n", IDPacote, finalMessage);
     printf("\n--------------------------------------\n");
 
   } /* fim do while */
