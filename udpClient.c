@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
   struct my_msg message;
   char ACK[3];
   long int msg_to_rec = 0;
-  msgid = msgget((key_t)14534, 0666 | IPC_CREAT);
+  msgid = msgget((key_t)12345, 0666 | IPC_CREAT);
   int flagRecebido = 1;
   /* Enviando um pacote para cada parâmetro informado */
   while (1)
@@ -74,11 +74,12 @@ int main(int argc, char *argv[])
     if (flagRecebido)
     {
       msgrcv(msgid, (void *)&message, MAX_MSG, msg_to_rec, 0);
-      printf("\nQuadro enviado!\n\n");
       if (strcmp(message.messageBody, "roger roger") == 0)
       {
+        sendto(sockerDescriptorClient, message.messageBody, strlen(message.messageBody), 0, (struct sockaddr *)&serverAddress, sizeof(serverAddress));
         return 1;
       }
+      printf("Quadro Enviado!\n");
     }
     if (sendto(sockerDescriptorClient, message.messageBody, strlen(message.messageBody), 0, (struct sockaddr *)&serverAddress, sizeof(serverAddress)) < 0)
     {

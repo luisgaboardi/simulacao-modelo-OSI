@@ -11,11 +11,15 @@
 #include <unistd.h> /* close() */
 #include <string.h> /* memset() */
 #include <stdlib.h>
+#include <ctype.h>
+#include "utils.h"
 
 int main(int argc, char *argv[])
 {
   int lastPackage = -1;
   int currentPackage;
+  char terminal[1000000];
+  char buffer [100000];
   int MAX_MSG = 100;
   int socketDescriptor;
   struct sockaddr_in clientAddress; /* Vai conter identificacao do cliente */
@@ -53,7 +57,6 @@ int main(int argc, char *argv[])
   /* Este servidor entra num loop infinito esperando dados de clientes */
   while (1)
   {
-
     /* inicia o buffer */
     memset(msg, 0x0, MAX_MSG);
     clientAdressSize = sizeof(clientAddress);
@@ -70,32 +73,46 @@ int main(int argc, char *argv[])
     if (msg[0] == '0' && msg[1] == '0' && msg[2] == '0')
     {
       lastPackage = -1;
-      printf("\nMENSAGEM RECEBIDA\n\n");
-      printf("Informações do Servidor:\n");
-      printf("   Protolo de rede: UDP\n");
-      printf("   Endereço de IP : %s\n", inet_ntoa(serverAddress.sin_addr));
-      printf("   Porta          : %u\n", ntohs(serverAddress.sin_port));
+      strcpy(terminal, "\nMENSAGEM RECEBIDA\n\n");
+      strcat(terminal,"Informações do Servidor:\n");
+      strcat(terminal,"   Protolo de rede: UDP\n");
+      sprintf(buffer, "   Endereço de IP : %s\n", inet_ntoa(serverAddress.sin_addr));
+      strcat(terminal, buffer);
+      sprintf(buffer, "   Porta          : %u\n", ntohs(serverAddress.sin_port));
+      strcat(terminal, buffer);
 
-      printf("\nInformações do Cliente:\n");
-      printf("   Endereço de IP : %s\n", inet_ntoa(clientAddress.sin_addr));
-      printf("   Porta          : %u\n", ntohs(clientAddress.sin_port));
-      printf("\n--------------------------------------\n");
+      strcat(terminal,"\nInformações do Cliente:\n");
+      sprintf(buffer, "   Endereço de IP : %s\n", inet_ntoa(clientAddress.sin_addr));
+      strcat(terminal, buffer);
+      sprintf(buffer, "   Porta          : %u\n", ntohs(clientAddress.sin_port));
+      strcat(terminal, buffer);
+      strcat(terminal,"\n--------------------------------------\n");
     }
     char finalMessage[10000], IDPacote[4];
-    strcpy(finalMessage, (msg) + 3);
+    if(isdigit(msg[0])){
+      strcpy(finalMessage, (msg) + 3);
+    }else{
+      strcpy(finalMessage, (msg));
+    }
     strncpy(IDPacote, msg, 3);
     currentPackage = atoi(IDPacote);
     if (currentPackage == lastPackage + 1)
     {
       lastPackage++;
-      printf("Mensagem[%s]: %s\n", IDPacote, finalMessage);
-      printf("\n--------------------------------------\n");
+      sprintf(buffer, "Mensagem[%s]: %s\n", IDPacote, finalMessage);
+      strcat(terminal, buffer);
+      strcat(terminal,"\n--------------------------------------\n");
     }else if (lastPackage == currentPackage){
-      printf("QUADRO Nº %d JA RECEBIDO!\n\n", currentPackage);
-    }else{
-      printf("ERROR: ESPERAVA O PACOTE %d RECEBI O PACOTE %d\n\n", lastPackage+1, currentPackage);
+      sprintf(buffer, "QUADRO Nº %d JA RECEBIDO!\n\n", currentPackage);
+      strcat(terminal, buffer);
+    }else if (strcmp(finalMessage, "roger roger") != 0){
+      sprintf(buffer, "ERROR: ESPERAVA O PACOTE %d RECEBI O PACOTE %d\n\n", lastPackage+1, currentPackage);
+      strcat(terminal, buffer);
     }
-
+    if(strcmp(finalMessage, "roger roger") == 0){
+      addFilaMensagens(terminal, 100, 14435);
+      return 0;
+    }
   } /* fim do while */
   return 0;
 

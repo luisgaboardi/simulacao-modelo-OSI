@@ -5,19 +5,16 @@
 #include <sys/types.h>
 #include <sys/ipc.h>
 #include <sys/msg.h>
+#include "utils.h"
 
-#define MAXSIZE 10000
+#define MAXSIZE 1000000
 
-struct my_msg
-{
-    long int msg_type;
-    char messageBody[MAXSIZE];
-};
+int tamQuadro;
 
 int menu();
-void menuEnviarMensagem();
-void splice(char[], struct my_msg, int, int);
-void enviarMensagem();
+void menuEnviarMensagens();
+void lerArquivo(char[]);
+void enviarQuadros();
 void receberMensagem();
 
 int main(int argc, char const *argv[])
@@ -27,11 +24,11 @@ int main(int argc, char const *argv[])
         printf("uso correto: %s  <tam do quadro>\n", argv[0]);
         exit(1);
     }
-    int tamQuadro = atoi(argv[1]);
-    return menu(tamQuadro);
+    tamQuadro = atoi(argv[1]);
+    return menu();
 }
 
-int menu(int tamQuadro)
+int menu()
 {
     int opcao = 0;
     while (opcao != 3)
@@ -46,7 +43,7 @@ int menu(int tamQuadro)
         switch (opcao)
         {
         case 1:
-            menuEnviarMensagem(tamQuadro);
+            menuEnviarMensagens(tamQuadro);
             break;
         case 2:
             receberMensagem();
@@ -58,55 +55,27 @@ int menu(int tamQuadro)
     return 0;
 }
 
-void splice(char mensagem[], struct my_msg message, int msgid, int tamQuadro)
+void menuEnviarMensagens()
 {
-    int i = 0;
-    int IDpacote = 0;
-    char stringID[12] = " as";
-    int tamHeader = 3;
-    char *mensagemPacote = (char *) calloc(tamQuadro, sizeof(char));
-    while (i <= strlen(mensagem))
-    {
-        message.msg_type = 1;
-        sprintf(stringID, "%.3d", IDpacote);
-        strncpy(mensagemPacote, (mensagem) + i, tamQuadro - tamHeader);
-        strcpy(message.messageBody, stringID);
-        strcat(message.messageBody, mensagemPacote);
-        if (msgsnd(msgid, (void *)&message, tamQuadro + 1, 0) == -1) // msgsnd returns -1 if the message is not sent
-        {
-            printf("Msg not sent\n");
-        }
-        i += tamQuadro - tamHeader;
-        IDpacote++;
-    }
-    struct my_msg finalMessage;
-    strcpy(finalMessage.messageBody, "roger roger");
-    finalMessage.msg_type = 1;
-    msgsnd(msgid, (void *)&finalMessage, tamQuadro + 1, 0);
-    IDpacote = 0;
-}
+    //system("clear");
 
-void menuEnviarMensagem(int tamQuadro)
-{
-    system("clear");
     char caminhoNome[100], mensagem[MAXSIZE] = "";
     printf("** Enviar mensagem **\n\n");
     printf("\nQual o caminho e nome do arquivo de texto que deseja enviar?\n> ");
     scanf("%s", caminhoNome);
 
-    int msgid;
-    struct my_msg message;
+    lerArquivo(caminhoNome);
+    
+    enviarQuadros();
+}
 
-    msgid = msgget((key_t)14534, 0666 | IPC_CREAT);
-    if (msgid == -1) // -1 means the message queue is not created
-    {
-        printf("Error in creating queue\n");
-        exit(0);
-    }
-
-    // Ler o arquivo
+void lerArquivo(char caminhoNome[])
+{
     char line[1000][1000];
+    char mensagem [100000];
     int i = 0;
+
+    //Abre arquivo
     FILE *ptr;
     ptr = fopen(caminhoNome, "r");
     if (NULL == ptr)
@@ -121,15 +90,17 @@ void menuEnviarMensagem(int tamQuadro)
     int tot = i;
     for (i = 0; i < tot; ++i)
     {
-        strcat(mensagem, line[i]);
+        if(i == 0){
+            strcpy(mensagem, line[i]);
+        }else{
+            strcat(mensagem, line[i]);
+        }
     }
     fclose(ptr);
-    // Gera identificador final
-    splice(mensagem, message, msgid, tamQuadro);
-    enviarMensagem();
+    addFilaMensagens(mensagem, tamQuadro, 12345);
 }
 
-void enviarMensagem()
+void enviarQuadros()
 {
     char cmd[100] = "";
     strcat(cmd, "gcc udpClient.c -o client && ./client ");
@@ -139,11 +110,25 @@ void enviarMensagem()
 }
 
 void receberMensagem()
-{
+{    
+    struct my_msg test;
+    long int msg_to_rec = 0;
+
     system("clear");
     char cmd[100] = "";
     strcat(cmd, "gcc udpServer.c -o server && ./server ");
     strcat(cmd, "127.0.0.25 ");
     strcat(cmd, "5000");
     system(cmd);
+
+    // //Criar fila
+    int msgid;
+    msgid = msgget((key_t)14435,0666 | IPC_CREAT);
+    while(1){
+        msgrcv(msgid, (void *)&test, MAXSIZE, msg_to_rec, 0);
+        if(strcmp(test.messageBody, "roger roger") == 0){
+            return;
+        }
+        printf("%s", test.messageBody);
+    }
 }
