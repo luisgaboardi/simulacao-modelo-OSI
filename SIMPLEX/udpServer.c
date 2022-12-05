@@ -18,8 +18,8 @@ int main(int argc, char *argv[])
 {
   int lastPackage = -1;
   int currentPackage;
-  char terminal[1000000];
-  char buffer [100000];
+  char terminal[10000];
+  char buffer [10000];
   int MAX_MSG = 100;
   int socketDescriptor;
   struct sockaddr_in clientAddress; /* Vai conter identificacao do cliente */
@@ -88,7 +88,7 @@ int main(int argc, char *argv[])
       strcat(terminal, buffer);
       strcat(terminal,"\n--------------------------------------\n");
     }
-    char finalMessage[10000], IDPacote[4];
+    char finalMessage[1000], IDPacote[4];
     if(isdigit(msg[0])){
       strcpy(finalMessage, (msg) + 3);
     }else{
@@ -110,6 +110,7 @@ int main(int argc, char *argv[])
       strcat(terminal, buffer);
     }
     if(strcmp(finalMessage, "roger roger") == 0){
+      printf("## Mensagem que tá indo pra fila: %s\n", terminal);
       addFilaMensagens(terminal, atoi(argv[3]), 14435);
       return 0;
     }
