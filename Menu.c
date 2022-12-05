@@ -16,6 +16,7 @@ struct my_msg
 
 int menu();
 void menuEnviarMensagem();
+void splice(char[], struct my_msg, int, int);
 void enviarMensagem();
 void receberMensagem();
 
@@ -35,7 +36,7 @@ int menu(int tamQuadro)
     int opcao = 0;
     while (opcao != 3)
     {
-        system("clear");
+        // system("clear");
         printf("** MENU **\n\n");
         printf("(1) Enviar uma mensagem\n");
         printf("(2) Receber uma mensagem\n");
@@ -61,21 +62,21 @@ void splice(char mensagem[], struct my_msg message, int msgid, int tamQuadro)
 {
     int i = 0;
     int IDpacote = 0;
-    char stringID[12];
-    char mensagemPacote[tamQuadro];
+    char stringID[12] = " as";
+    int tamHeader = 3;
+    char *mensagemPacote = (char *) calloc(tamQuadro, sizeof(char));
     while (i <= strlen(mensagem))
     {
         message.msg_type = 1;
         sprintf(stringID, "%.3d", IDpacote);
-        strncpy(mensagemPacote, (mensagem) + i, tamQuadro);
+        strncpy(mensagemPacote, (mensagem) + i, tamQuadro - tamHeader);
         strcpy(message.messageBody, stringID);
         strcat(message.messageBody, mensagemPacote);
-        message.messageBody[tamQuadro] = '\0';
         if (msgsnd(msgid, (void *)&message, tamQuadro + 1, 0) == -1) // msgsnd returns -1 if the message is not sent
         {
             printf("Msg not sent\n");
         }
-        i += tamQuadro + 1;
+        i += tamQuadro - tamHeader;
         IDpacote++;
     }
     struct my_msg finalMessage;
@@ -139,6 +140,7 @@ void enviarMensagem()
 
 void receberMensagem()
 {
+    system("clear");
     char cmd[100] = "";
     strcat(cmd, "gcc udpServer.c -o server && ./server ");
     strcat(cmd, "127.0.0.25 ");

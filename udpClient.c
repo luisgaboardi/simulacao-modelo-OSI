@@ -14,6 +14,7 @@
 #include <sys/types.h>
 #include <sys/ipc.h>
 #include <sys/msg.h>
+#include <time.h>
 
 struct my_msg
 {
@@ -24,7 +25,7 @@ struct my_msg
 
 int main(int argc, char *argv[])
 {
-  int socketDescriptor;
+  int sockerDescriptorClient, sockerDescriptorServer;
   struct sockaddr_in ClientAddress; /* dados do cliente local   */
   struct sockaddr_in serverAddress; /* dados do servidor remoto */
 
@@ -46,17 +47,16 @@ int main(int argc, char *argv[])
   ClientAddress.sin_port = htons(4000);              /* Define porta */
 
   /* Criando um socket. Nesse momento a variavel       */
-  /* socketDescriptor contém apenas dados sobre familia e protocolo  */
-  socketDescriptor = socket(AF_INET, SOCK_DGRAM, 0); /* AF_INET = utiliza IPV4, SOCK_DGRAM = utiliza UDP, 0 = utiliza protocolo IP */
-  if (socketDescriptor < 0)
+  /* sockerDescriptorClient contém apenas dados sobre familia e protocolo  */
+  sockerDescriptorClient = socket(AF_INET, SOCK_DGRAM, 0); /* AF_INET = utiliza IPV4, SOCK_DGRAM = utiliza UDP, 0 = utiliza protocolo IP */
+  if (sockerDescriptorClient < 0)
   {
     printf("%s: nao pode abrir o socket \n", argv[0]);
     exit(1);
   }
-
-  /* Relacionando o socket socketDescriptor com a estrutura ClientAddress */
-  /* Depois do bind, socketDescriptor faz referencia a protocolo local, ip local e porta local */
-  if (bind(socketDescriptor, (struct sockaddr *)&ClientAddress, sizeof(ClientAddress)) < 0)
+  /* Relacionando o socket sockerDescriptorClient com a estrutura ClientAddress */
+  /* Depois do bind, sockerDescriptorClient faz referencia a protocolo local, ip local e porta local */
+  if (bind(sockerDescriptorClient, (struct sockaddr *)&ClientAddress, sizeof(ClientAddress)) < 0)
   {
     printf("%s: nao pode fazer um bind da porta\n", argv[0]);
     exit(1);
@@ -64,22 +64,49 @@ int main(int argc, char *argv[])
 
   int msgid;
   struct my_msg message;
+  char ACK[3];
   long int msg_to_rec = 0;
   msgid = msgget((key_t)14534, 0666 | IPC_CREAT);
-
+  int flagRecebido = 1;
   /* Enviando um pacote para cada parâmetro informado */
   while (1)
   {
-    msgrcv(msgid, (void *)&message, 51, msg_to_rec, 0);
-    if (strcmp(message.messageBody, "roger roger") == 0)
+    if (flagRecebido)
     {
-      break;
+      msgrcv(msgid, (void *)&message, 51, msg_to_rec, 0);
+      printf("\nQuando enviado!\n\n");
+      if (strcmp(message.messageBody, "roger roger") == 0)
+      {
+        return 1;
+      }
     }
-    if (sendto(socketDescriptor, message.messageBody, strlen(message.messageBody), 0, (struct sockaddr *)&serverAddress, sizeof(serverAddress)) < 0)
+    if (sendto(sockerDescriptorClient, message.messageBody, strlen(message.messageBody), 0, (struct sockaddr *)&serverAddress, sizeof(serverAddress)) < 0)
     {
       printf("%s: nao pode enviar dados %s \n", argv[0], message.messageBody);
-      close(socketDescriptor);
+      close(sockerDescriptorClient);
       exit(1);
+    }
+
+    clock_t before = clock();
+    socklen_t serverAdressSize = sizeof(serverAddress);
+    flagRecebido = 0;
+    while (flagRecebido == 0) // enquanto não recebe confirmação
+    {
+      before = clock();
+      if (recvfrom(sockerDescriptorClient, ACK, MAX_MSG, 0, (struct sockaddr *)&serverAddress, &serverAdressSize) >= 0)
+      {
+        // printf("Time: %ld\n", clock() - before);
+        if (strcmp(ACK, "OK") == 0 && (clock() - before) < 30)
+        {
+          flagRecebido = 1;
+          break;
+        }
+        else
+        {
+          printf("ERROR: Servidor não confirmou recebimento. Tentando envio novamente.\n\n");
+          sendto(sockerDescriptorClient, message.messageBody, strlen(message.messageBody), 0, (struct sockaddr *)&serverAddress, sizeof(serverAddress));
+        }
+      }
     }
   }
   return 1;

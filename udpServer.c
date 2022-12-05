@@ -14,6 +14,8 @@
 
 int main(int argc, char *argv[])
 {
+  int lastPackage = -1;
+  int currentPackage;
   int MAX_MSG = 100;
   int socketDescriptor;
   struct sockaddr_in clientAddress; /* Vai conter identificacao do cliente */
@@ -62,9 +64,12 @@ int main(int argc, char *argv[])
       continue;
     }
 
+    sendto(socketDescriptor, "OK", 3, 0, (struct sockaddr *)&clientAddress, sizeof(clientAddress));
+
     /* imprime a mensagem recebida na tela do usuario */
     if (msg[0] == '0' && msg[1] == '0' && msg[2] == '0')
     {
+      lastPackage = -1;
       printf("\nMENSAGEM RECEBIDA\n\n");
       printf("Informações do Servidor:\n");
       printf("   Protolo de rede: UDP\n");
@@ -77,10 +82,17 @@ int main(int argc, char *argv[])
       printf("\n--------------------------------------\n");
     }
     char finalMessage[10000], IDPacote[4];
-    strcpy(finalMessage, (msg)+3);
+    strcpy(finalMessage, (msg) + 3);
     strncpy(IDPacote, msg, 3);
-    printf("Mensagem[%s]: %s\n", IDPacote, finalMessage);
-    printf("\n--------------------------------------\n");
+    currentPackage = atoi(IDPacote);
+    if (currentPackage == lastPackage + 1)
+    {
+      lastPackage++;
+      printf("Mensagem[%s]: %s\n", IDPacote, finalMessage);
+      printf("\n--------------------------------------\n");
+    }else if (lastPackage != currentPackage){
+      printf("ERROR: ESPERAVA O PACOTE %d RECEBI O PACOTE %d\n", lastPackage+1, currentPackage);
+    }
 
   } /* fim do while */
   return 0;
