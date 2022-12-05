@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
     printf("uso correto: %s <ip_do_servidor> <porta_do_servidor> <dado1> ... <dadoN> \n", argv[0]);
     exit(1);
   }
-
+  printf("%s %s %s\n", argv[0], argv[1], argv[2]);
   /* Preenchendo as informacoes de identificacao do remoto */
   serverAddress.sin_family = AF_INET;                 /* Protocolo IPV4 */
   serverAddress.sin_addr.s_addr = inet_addr(argv[1]); /* O endereço IP */
@@ -96,7 +96,7 @@ int main(int argc, char *argv[])
       before = clock();
       if (recvfrom(sockerDescriptorClient, ACK, MAX_MSG, 0, (struct sockaddr *)&serverAddress, &serverAdressSize) >= 0)
       {
-        if (strcmp(ACK, "OK") == 0 && (clock() - before) < 25)
+        if (strcmp(ACK, "OK") == 0 && (clock() - before) < 100)
         {
           flagRecebido = 1;
           break;

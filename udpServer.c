@@ -69,25 +69,6 @@ int main(int argc, char *argv[])
 
     sendto(socketDescriptor, "OK", 3, 0, (struct sockaddr *)&clientAddress, sizeof(clientAddress));
 
-    /* imprime a mensagem recebida na tela do usuario */
-    if (msg[0] == '0' && msg[1] == '0' && msg[2] == '0')
-    {
-      lastPackage = -1;
-      strcpy(terminal, "\nMENSAGEM RECEBIDA\n\n");
-      strcat(terminal,"Informações do Servidor:\n");
-      strcat(terminal,"   Protolo de rede: UDP\n");
-      sprintf(buffer, "   Endereço de IP : %s\n", inet_ntoa(serverAddress.sin_addr));
-      strcat(terminal, buffer);
-      sprintf(buffer, "   Porta          : %u\n", ntohs(serverAddress.sin_port));
-      strcat(terminal, buffer);
-
-      strcat(terminal,"\nInformações do Cliente:\n");
-      sprintf(buffer, "   Endereço de IP : %s\n", inet_ntoa(clientAddress.sin_addr));
-      strcat(terminal, buffer);
-      sprintf(buffer, "   Porta          : %u\n", ntohs(clientAddress.sin_port));
-      strcat(terminal, buffer);
-      strcat(terminal,"\n--------------------------------------\n");
-    }
     char finalMessage[10000], IDPacote[4];
     if(isdigit(msg[0])){
       strcpy(finalMessage, (msg) + 3);
@@ -99,18 +80,10 @@ int main(int argc, char *argv[])
     if (currentPackage == lastPackage + 1)
     {
       lastPackage++;
-      sprintf(buffer, "Mensagem[%s]: %s\n", IDPacote, finalMessage);
-      strcat(terminal, buffer);
-      strcat(terminal,"\n--------------------------------------\n");
-    }else if (lastPackage == currentPackage){
-      sprintf(buffer, "QUADRO Nº %d JA RECEBIDO!\n\n", currentPackage);
-      strcat(terminal, buffer);
-    }else if (strcmp(finalMessage, "roger roger") != 0){
-      sprintf(buffer, "ERROR: ESPERAVA O PACOTE %d RECEBI O PACOTE %d\n\n", lastPackage+1, currentPackage);
-      strcat(terminal, buffer);
+      strcat(terminal, finalMessage);
     }
     if(strcmp(finalMessage, "roger roger") == 0){
-      addFilaMensagens(terminal, 100, 14435);
+      addFilaMensagens(terminal, atoi(argv[3]), 14435);
       return 0;
     }
   } /* fim do while */
