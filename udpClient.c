@@ -19,9 +19,9 @@
 struct my_msg
 {
   long int msgID;
-  char messageBody[51];
+  char messageBody[10000];
 };
-#define MAX_MSG 100
+#define MAX_MSG 100000
 
 int main(int argc, char *argv[])
 {
@@ -73,8 +73,8 @@ int main(int argc, char *argv[])
   {
     if (flagRecebido)
     {
-      msgrcv(msgid, (void *)&message, 51, msg_to_rec, 0);
-      printf("\nQuando enviado!\n\n");
+      msgrcv(msgid, (void *)&message, MAX_MSG, msg_to_rec, 0);
+      printf("\nQuadro enviado!\n\n");
       if (strcmp(message.messageBody, "roger roger") == 0)
       {
         return 1;
@@ -95,15 +95,14 @@ int main(int argc, char *argv[])
       before = clock();
       if (recvfrom(sockerDescriptorClient, ACK, MAX_MSG, 0, (struct sockaddr *)&serverAddress, &serverAdressSize) >= 0)
       {
-        // printf("Time: %ld\n", clock() - before);
-        if (strcmp(ACK, "OK") == 0 && (clock() - before) < 30)
+        if (strcmp(ACK, "OK") == 0 && (clock() - before) < 25)
         {
           flagRecebido = 1;
           break;
         }
         else
         {
-          printf("ERROR: Servidor não confirmou recebimento. Tentando envio novamente.\n\n");
+          printf("ERROR: Servidor não confirmou recebimento a tempo.\n\n");
           sendto(sockerDescriptorClient, message.messageBody, strlen(message.messageBody), 0, (struct sockaddr *)&serverAddress, sizeof(serverAddress));
         }
       }

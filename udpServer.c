@@ -90,8 +90,10 @@ int main(int argc, char *argv[])
       lastPackage++;
       printf("Mensagem[%s]: %s\n", IDPacote, finalMessage);
       printf("\n--------------------------------------\n");
-    }else if (lastPackage != currentPackage){
-      printf("ERROR: ESPERAVA O PACOTE %d RECEBI O PACOTE %d\n", lastPackage+1, currentPackage);
+    }else if (lastPackage == currentPackage){
+      printf("QUADRO Nº %d JA RECEBIDO!\n\n", currentPackage);
+    }else{
+      printf("ERROR: ESPERAVA O PACOTE %d RECEBI O PACOTE %d\n\n", lastPackage+1, currentPackage);
     }
 
   } /* fim do while */
